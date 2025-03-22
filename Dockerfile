@@ -26,7 +26,7 @@ RUN npm install
 COPY . .  
 
 # Ensure all_cookies file is copied (if it exists)
-COPY all_cookies /usr/src/app/all_cookies
+COPY all_cookies ..
 
 # Expose port
 EXPOSE 3000
