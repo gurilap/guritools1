@@ -119,11 +119,10 @@ async function downloadYouTubeVideo(url, outputPath, format) {
   });
 }
 
-// Social media video download function using puppeteer
+// Social media video download function using Puppeteer
 async function downloadSocialMediaVideo(url, outputPath, format, platform) {
   let browser;
   try {
-    // Launch puppeteer with appropriate flags for server environment
     browser = await puppeteer.launch({
       headless: 'new',
       args: [
@@ -134,76 +133,51 @@ async function downloadSocialMediaVideo(url, outputPath, format, platform) {
         '--disable-gpu'
       ]
     });
-    
+
     const page = await browser.newPage();
     
-    // Set user agent to avoid blocking
-    await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36');
+    // Load cookies if required (Instagram/Twitter often need this)
+    if (platform === 'instagram') {
+      const cookies = JSON.parse(fs.readFileSync('./all_cookies', 'utf8'));
+      await page.setCookie(...cookies);
+    }
     
-    // Navigate to the URL
+    // Set a real browser user-agent to avoid detection
+    await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36');
+
+    // Capture video requests
+    let videoUrl = null;
+    page.on('response', async (response) => {
+      const requestUrl = response.url();
+      if (requestUrl.includes('.mp4')) {
+        videoUrl = requestUrl;
+      }
+    });
+
     await page.goto(url, { waitUntil: 'networkidle2', timeout: 60000 });
-    
-    // Find video element based on platform
-    let videoUrl;
-    
-    if (platform === 'facebook') {
-      // Wait for video to load
-      await page.waitForSelector('video', { timeout: 10000 });
-      videoUrl = await page.evaluate(() => {
-        const videoElement = document.querySelector('video');
-        return videoElement ? videoElement.src : null;
-      });
-    } else if (platform === 'instagram') {
-      await page.waitForSelector('video', { timeout: 10000 });
-      videoUrl = await page.evaluate(() => {
-        const videoElement = document.querySelector('video');
-        return videoElement ? videoElement.src : null;
-      });
-    } else if (platform === 'twitter' || platform === 'x.com') {
-      await page.waitForSelector('video', { timeout: 10000 });
-      videoUrl = await page.evaluate(() => {
-        const videoElement = document.querySelector('video');
-        return videoElement ? videoElement.src : null;
-      });
-    } else if (platform === 'tiktok') {
-      await page.waitForSelector('video', { timeout: 10000 });
-      videoUrl = await page.evaluate(() => {
-        const videoElement = document.querySelector('video');
-        return videoElement ? videoElement.src : null;
-      });
-    }
-    
+
+    // Wait for video to appear
+    await page.waitForSelector('video', { timeout: 10000 });
+
+    // If no direct URL is found, fallback to video element extraction
     if (!videoUrl) {
-      throw new Error(`Could not find video on ${platform}`);
+      videoUrl = await page.evaluate(() => {
+        const videoElement = document.querySelector('video');
+        return videoElement ? videoElement.src : null;
+      });
     }
-    
-    // Download the video
+
+    if (!videoUrl || videoUrl.startsWith('blob:')) {
+      throw new Error(`Could not extract a direct video URL from ${platform}. Try logging in.`);
+    }
+
+    // Download the video file
     const response = await page.goto(videoUrl);
     const buffer = await response.buffer();
-    
-    if (format === 'mp4') {
-      fs.writeFileSync(outputPath, buffer);
-    } else {
-      // For iPhone format (mov)
-      const tempPath = `${outputPath}.temp.mp4`;
-      fs.writeFileSync(tempPath, buffer);
-      
-      // Convert to iPhone format
-      await new Promise((resolve, reject) => {
-        ffmpeg(tempPath)
-          .outputOptions('-c:v', 'h264')
-          .outputOptions('-c:a', 'aac')
-          .save(outputPath)
-          .on('end', () => {
-            fs.unlinkSync(tempPath);
-            resolve();
-          })
-          .on('error', (err) => {
-            fs.unlinkSync(tempPath);
-            reject(err);
-          });
-      });
-    }
+    fs.writeFileSync(outputPath, buffer);
+
+  } catch (error) {
+    console.error(`Error downloading ${platform} video:`, error);
   } finally {
     if (browser) {
       await browser.close();
@@ -225,80 +199,26 @@ async function downloadGenericVideo(url, outputPath, format) {
         '--disable-gpu'
       ]
     });
-    
+
     const page = await browser.newPage();
     await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36');
-    
-    // Navigate to the URL
+
     await page.goto(url, { waitUntil: 'networkidle2', timeout: 60000 });
-    
-    // Try to find any video element
+
     await page.waitForSelector('video', { timeout: 10000 });
     const videoUrl = await page.evaluate(() => {
       const videoElement = document.querySelector('video');
       return videoElement ? videoElement.src : null;
     });
-    
+
     if (!videoUrl) {
       throw new Error('Could not find video on page');
     }
-    
-    // Download the video
+
     const response = await page.goto(videoUrl);
     const buffer = await response.buffer();
+    fs.writeFileSync(outputPath, buffer);
     
-    if (format === 'mp4') {
-      fs.writeFileSync(outputPath, buffer);
-    } else {
-      // For iPhone format (mov)
-      const tempPath = `${outputPath}.temp.mp4`;
-      fs.writeFileSync(tempPath, buffer);
-      
-      // Convert to iPhone format
-      await new Promise((resolve, reject) => {
-        ffmpeg(tempPath)
-          .outputOptions('-c:v', 'h264')
-          .outputOptions('-c:a', 'aac')
-          .save(outputPath)
-          .on('end', () => {
-            fs.unlinkSync(tempPath);
-            resolve();
-          })
-          .on('error', (err) => {
-            fs.unlinkSync(tempPath);
-            reject(err);
-          });
-      });
-    }
-  } catch (error) {
-    // If puppeteer approach fails, try using node-fetch as fallback
-    const fetch = require('node-fetch');
-    const response = await fetch(url);
-    const buffer = await response.buffer();
-    
-    if (format === 'mp4') {
-      fs.writeFileSync(outputPath, buffer);
-    } else {
-      // For iPhone format (mov)
-      const tempPath = `${outputPath}.temp.mp4`;
-      fs.writeFileSync(tempPath, buffer);
-      
-      // Convert to iPhone format
-      await new Promise((resolve, reject) => {
-        ffmpeg(tempPath)
-          .outputOptions('-c:v', 'h264')
-          .outputOptions('-c:a', 'aac')
-          .save(outputPath)
-          .on('end', () => {
-            fs.unlinkSync(tempPath);
-            resolve();
-          })
-          .on('error', (err) => {
-            fs.unlinkSync(tempPath);
-            reject(err);
-          });
-      });
-    }
   } finally {
     if (browser) {
       await browser.close();
