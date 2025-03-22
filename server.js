@@ -7,7 +7,6 @@ const puppeteer = require('puppeteer');
 const ffmpeg = require('fluent-ffmpeg');
 const { v4: uuidv4 } = require('uuid');
 
-// Create Express app
 const app = express();
 const PORT = process.env.PORT || 3000;
 
@@ -21,7 +20,7 @@ if (!fs.existsSync(downloadsDir)) {
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.json());
 app.use(cors());
-app.use('/downloads', express.static(path.join(__dirname, 'downloads')));
+app.use('/downloads', express.static(downloadsDir));
 
 // Routes
 app.get('/', (req, res) => {
@@ -32,7 +31,7 @@ app.get('/', (req, res) => {
 app.post('/downloads', async (req, res) => {
   try {
     const { url, format, platform } = req.body;
-    
+
     if (!url) {
       return res.status(400).json({ success: false, error: 'URL is required' });
     }
@@ -41,7 +40,12 @@ app.post('/downloads', async (req, res) => {
     const downloadId = uuidv4();
     const fileName = `video-${downloadId}.${format}`;
     const outputPath = path.join(downloadsDir, fileName);
-    
+
+    // Ensure the downloads folder exists
+    if (!fs.existsSync(downloadsDir)) {
+      fs.mkdirSync(downloadsDir, { recursive: true });
+    }
+
     // Handle different platforms
     switch (platform) {
       case 'youtube':
@@ -56,11 +60,16 @@ app.post('/downloads', async (req, res) => {
       default:
         await downloadGenericVideo(url, outputPath, format);
     }
-    
+
+    // Validate if file exists before responding
+    if (!fs.existsSync(outputPath)) {
+      throw new Error('Download failed. No video file was saved.');
+    }
+
     // Get file size
     const stats = fs.statSync(outputPath);
     const fileSizeMB = (stats.size / (1024 * 1024)).toFixed(2);
-    
+
     // Success response
     res.json({
       success: true,
@@ -69,19 +78,19 @@ app.post('/downloads', async (req, res) => {
       size: `${fileSizeMB} MB`,
       downloadUrl: `/downloads/${fileName}`
     });
-    
+
     // Set a cleanup timeout (24 hours)
     setTimeout(() => {
       if (fs.existsSync(outputPath)) {
         fs.unlinkSync(outputPath);
       }
     }, 24 * 60 * 60 * 1000);
-    
+
   } catch (error) {
     console.error('Download error:', error);
-    res.status(500).json({ 
-      success: false, 
-      error: 'Failed to download video. Please check the URL and try again.' 
+    res.status(500).json({
+      success: false,
+      error: 'Failed to download video. Please check the URL and try again.'
     });
   }
 });
@@ -90,17 +99,16 @@ app.post('/downloads', async (req, res) => {
 async function downloadYouTubeVideo(url, outputPath, format) {
   return new Promise((resolve, reject) => {
     const videoStream = ytdl(url, { quality: 'highest' });
-    
+
     if (format === 'mp4') {
       videoStream.pipe(fs.createWriteStream(outputPath))
         .on('finish', resolve)
         .on('error', reject);
     } else {
-      // For iPhone format (mov)
+      // Convert to iPhone format (MOV)
       const tempPath = `${outputPath}.temp.mp4`;
       videoStream.pipe(fs.createWriteStream(tempPath))
         .on('finish', () => {
-          // Convert to iPhone format using ffmpeg
           ffmpeg(tempPath)
             .outputOptions('-c:v', 'h264')
             .outputOptions('-c:a', 'aac')
@@ -135,14 +143,16 @@ async function downloadSocialMediaVideo(url, outputPath, format, platform) {
     });
 
     const page = await browser.newPage();
-    
-    // Load cookies if required (Instagram/Twitter often need this)
-    if (platform === 'instagram') {
-      const cookies = JSON.parse(fs.readFileSync('all_cookies', 'utf8'));
+
+    // Handle Instagram cookies (only if file exists)
+    const cookiesPath = path.join(__dirname, 'all_cookies');
+    if (fs.existsSync(cookiesPath)) {
+      const cookies = JSON.parse(fs.readFileSync(cookiesPath, 'utf8'));
       await page.setCookie(...cookies);
+    } else {
+      console.warn("⚠️ Warning: 'all_cookies' file not found. Running without cookies.");
     }
-    
-    // Set a real browser user-agent to avoid detection
+
     await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36');
 
     // Capture video requests
@@ -156,10 +166,8 @@ async function downloadSocialMediaVideo(url, outputPath, format, platform) {
 
     await page.goto(url, { waitUntil: 'networkidle2', timeout: 60000 });
 
-    // Wait for video to appear
     await page.waitForSelector('video', { timeout: 10000 });
 
-    // If no direct URL is found, fallback to video element extraction
     if (!videoUrl) {
       videoUrl = await page.evaluate(() => {
         const videoElement = document.querySelector('video');
@@ -176,49 +184,13 @@ async function downloadSocialMediaVideo(url, outputPath, format, platform) {
     const buffer = await response.buffer();
     fs.writeFileSync(outputPath, buffer);
 
+    // Validate download
+    if (!fs.existsSync(outputPath)) {
+      throw new Error('Download failed. No video file was saved.');
+    }
+
   } catch (error) {
     console.error(`Error downloading ${platform} video:`, error);
-  } finally {
-    if (browser) {
-      await browser.close();
-    }
-  }
-}
-
-// Generic video download function for other sources
-async function downloadGenericVideo(url, outputPath, format) {
-  let browser;
-  try {
-    browser = await puppeteer.launch({
-      headless: 'new',
-      args: [
-        '--no-sandbox',
-        '--disable-setuid-sandbox',
-        '--disable-dev-shm-usage',
-        '--disable-accelerated-2d-canvas',
-        '--disable-gpu'
-      ]
-    });
-
-    const page = await browser.newPage();
-    await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36');
-
-    await page.goto(url, { waitUntil: 'networkidle2', timeout: 60000 });
-
-    await page.waitForSelector('video', { timeout: 10000 });
-    const videoUrl = await page.evaluate(() => {
-      const videoElement = document.querySelector('video');
-      return videoElement ? videoElement.src : null;
-    });
-
-    if (!videoUrl) {
-      throw new Error('Could not find video on page');
-    }
-
-    const response = await page.goto(videoUrl);
-    const buffer = await response.buffer();
-    fs.writeFileSync(outputPath, buffer);
-    
   } finally {
     if (browser) {
       await browser.close();
