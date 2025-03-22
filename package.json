@@ -4,8 +4,8 @@
   "description": "A video downloader service for Android and iPhone devices",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js",
-    "dev": "nodemon server.js"
+    "start": "YTDL_NO_UPDATE=1 node server.js",
+    "dev": "YTDL_NO_UPDATE=1 nodemon server.js"
   },
   "engines": {
     "node": "18.x"
