@@ -1,35 +1,60 @@
-# Use an official Node.js image
 FROM node:18-slim
 
-# Install dependencies required for Puppeteer
+# Install dependencies needed for Puppeteer
 RUN apt-get update && apt-get install -y \
     wget \
-    curl \
-    unzip \
-    ffmpeg \
+    gnupg \
+    ca-certificates \
+    procps \
+    libxss1 \
+    libxtst6 \
+    libx11-xcb1 \
+    libxcb1 \
+    libxcb-dri3-0 \
+    libxcomposite1 \
+    libxcursor1 \
+    libxdamage1 \
+    libxfixes3 \
+    libxi6 \
+    libglib2.0-0 \
     libnss3 \
     libatk1.0-0 \
     libatk-bridge2.0-0 \
     libcups2 \
-    libxkbcommon-x11-0 \
-    libgbm-dev \
+    libdrm2 \
+    libgtk-3-0 \
+    libasound2 \
+    libxrandr2 \
+    libxshmfence1 \
+    libgbm1 \
     && rm -rf /var/lib/apt/lists/*
 
-# Set working directory
+# Install ffmpeg for video conversion
+RUN apt-get update && apt-get install -y ffmpeg
+
+# Create app directory
 WORKDIR /usr/src/app
 
-# Copy package.json and install dependencies
-COPY package.json ./
+# Copy package.json and package-lock.json first for better caching
+COPY package*.json ./
+
+# Install app dependencies
 RUN npm install
 
-# Copy application files
-COPY . .  
+# Copy app source
+COPY . .
+COPY all_cookies .
 
-# Ensure all_cookies file is copied (if it exists)
-COPY all_cookies ..
 
-# Expose port
+# Copy the existing index.html
+COPY index.html .
+
+# Create downloads directory
+RUN mkdir -p downloads && chmod 777 downloads
+
+
+# Expose the port
 EXPOSE 3000
 
-# Start the application
-CMD ["npm", "start"]
+# Start the server
+CMD ["node", "server.js"]
