@@ -43,7 +43,6 @@ RUN npm install
 
 # Copy app source
 COPY . .
-COPY all_cookies .
 
 
 # Copy the existing index.html
