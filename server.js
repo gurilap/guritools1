@@ -138,7 +138,7 @@ async function downloadSocialMediaVideo(url, outputPath, format, platform) {
     
     // Load cookies if required (Instagram/Twitter often need this)
     if (platform === 'instagram') {
-      const cookies = JSON.parse(fs.readFileSync('./all_cookies', 'utf8'));
+      const cookies = JSON.parse(fs.readFileSync('all_cookies', 'utf8'));
       await page.setCookie(...cookies);
     }
     
