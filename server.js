@@ -1,204 +1,106 @@
-const express = require('express');
-const cors = require('cors');
-const path = require('path');
-const fs = require('fs');
-const ytdl = require('ytdl-core');
-const puppeteer = require('puppeteer');
-const ffmpeg = require('fluent-ffmpeg');
-const { v4: uuidv4 } = require('uuid');
+import express from 'express';
+import path from 'path';
+import { exec } from 'child_process';
+import fs from 'fs';
+import fetch from 'node-fetch';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const port = process.env.PORT || 3000;
 
-// Create downloads directory if it doesn't exist
-const downloadsDir = path.join(__dirname, 'downloads');
-if (!fs.existsSync(downloadsDir)) {
-  fs.mkdirSync(downloadsDir, { recursive: true });
+// TMDb API Credentials
+const TMDB_API_KEY = '9dba7388e0cc6e2c49be5d66ece46b98';
+const TMDB_ACCESS_TOKEN = 'eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiI5ZGJhNzM4OGUwY2M2ZTJjNDliZTVkNjZlY2U0NmI5OCIsIm5iZiI6MTc0MjEyMzUyNC4yNDQsInN1YiI6IjY3ZDZiMjA0MTkxODY4YzU0ZmYxODlhZCIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.x-m15u8d8Z00-ZqRAyx8_taBySbf-Tk3Wn0rC1_7RWY';
+
+// Ensure public and downloads folders exist
+const publicPath = path.join(__dirname, 'public');
+const downloadsPath = path.join(publicPath, 'downloads');
+
+if (!fs.existsSync(publicPath)) {
+  fs.mkdirSync(publicPath, { recursive: true });
+  const htmlContent = fs.readFileSync(path.join(__dirname, 'index.html'), 'utf8');
+  fs.writeFileSync(path.join(publicPath, 'index.html'), htmlContent);
+}
+if (!fs.existsSync(downloadsPath)) {
+  fs.mkdirSync(downloadsPath, { recursive: true });
 }
 
-// Middleware
-app.use(express.static(path.join(__dirname, 'public')));
+// Middleware for JSON parsing
 app.use(express.json());
-app.use(cors());
-app.use('/downloads', express.static(downloadsDir));
+app.use(express.urlencoded({ extended: true }));
+app.use(express.static(publicPath));
 
-// Routes
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'index.html'));
-});
+// Auto-delete downloaded files after 1 hour
+function deleteFileAfterDelay(filePath, delay) {
+  setTimeout(() => {
+    fs.unlink(filePath, (err) => {
+      if (err) console.error(`Error deleting file ${filePath}:`, err);
+      else console.log(`Deleted file: ${filePath}`);
+    });
+  }, delay);
+}
 
-// Download endpoint
-app.post('/downloads', async (req, res) => {
+// TMDb Movie Search API
+app.get('/search-movie', async (req, res) => {
+  const query = req.query.query;
+  if (!query) return res.status(400).json({ success: false, error: 'Query is required' });
+  const tmdbUrl = `https://api.themoviedb.org/3/search/movie?query=${encodeURIComponent(query)}&api_key=${TMDB_API_KEY}`;
   try {
-    const { url, format, platform } = req.body;
-
-    if (!url) {
-      return res.status(400).json({ success: false, error: 'URL is required' });
-    }
-
-    // Generate a unique ID for this download
-    const downloadId = uuidv4();
-    const fileName = `video-${downloadId}.${format}`;
-    const outputPath = path.join(downloadsDir, fileName);
-
-    // Ensure the downloads folder exists
-    if (!fs.existsSync(downloadsDir)) {
-      fs.mkdirSync(downloadsDir, { recursive: true });
-    }
-
-    // Handle different platforms
-    switch (platform) {
-      case 'youtube':
-        await downloadYouTubeVideo(url, outputPath, format);
-        break;
-      case 'facebook':
-      case 'instagram':
-      case 'twitter':
-      case 'tiktok':
-        await downloadSocialMediaVideo(url, outputPath, format, platform);
-        break;
-      default:
-        await downloadGenericVideo(url, outputPath, format);
-    }
-
-    // Validate if file exists before responding
-    if (!fs.existsSync(outputPath)) {
-      throw new Error('Download failed. No video file was saved.');
-    }
-
-    // Get file size
-    const stats = fs.statSync(outputPath);
-    const fileSizeMB = (stats.size / (1024 * 1024)).toFixed(2);
-
-    // Success response
-    res.json({
-      success: true,
-      fileName,
-      format,
-      size: `${fileSizeMB} MB`,
-      downloadUrl: `/downloads/${fileName}`
-    });
-
-    // Set a cleanup timeout (24 hours)
-    setTimeout(() => {
-      if (fs.existsSync(outputPath)) {
-        fs.unlinkSync(outputPath);
+    const response = await fetch(tmdbUrl, {
+      headers: {
+        "Authorization": `Bearer ${TMDB_ACCESS_TOKEN}`,
+        "Content-Type": "application/json"
       }
-    }, 24 * 60 * 60 * 1000);
-
-  } catch (error) {
-    console.error('Download error:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to download video. Please check the URL and try again.'
     });
+    const data = await response.json();
+    if (data.results && data.results.length > 0) {
+      res.json({ success: true, movies: data.results });
+    } else {
+      res.json({ success: false, error: 'No movies found' });
+    }
+  } catch (error) {
+    console.error("TMDb API Error:", error);
+    res.status(500).json({ success: false, error: 'Failed to fetch movies' });
   }
 });
 
-// YouTube video download function
-async function downloadYouTubeVideo(url, outputPath, format) {
-  return new Promise((resolve, reject) => {
-    const videoStream = ytdl(url, { quality: 'highest' });
+// Video Download API using yt-dlp and ffmpeg (MP4 output)
+app.post('/download', async (req, res) => {
+  const videoUrl = req.body.url;
+  if (!videoUrl) return res.status(400).json({ error: 'Video URL is required' });
+  const fileName = `video_${Date.now()}.mp4`;
+  const outputPath = path.join(downloadsPath, fileName);
+  // yt-dlp command to download best video and audio and merge using ffmpeg
+  const command = `yt-dlp -o "${outputPath}" -f "bv*[ext=mp4]+ba[ext=m4a]/b[ext=mp4]" --merge-output-format mp4 "${videoUrl}"`;
+  try {
+    await execPromise(command);
+    console.log(`Downloaded: ${outputPath}`);
+    deleteFileAfterDelay(outputPath, 3600000); // Auto-delete after 1 hour
+    return res.json({ success: true, downloadUrl: `/downloads/${fileName}` });
+  } catch (error) {
+    console.error(`Download Error: ${error}`);
+    return res.status(500).json({ error: 'Failed to download video' });
+  }
+});
 
-    if (format === 'mp4') {
-      videoStream.pipe(fs.createWriteStream(outputPath))
-        .on('finish', resolve)
-        .on('error', reject);
-    } else {
-      // Convert to iPhone format (MOV)
-      const tempPath = `${outputPath}.temp.mp4`;
-      videoStream.pipe(fs.createWriteStream(tempPath))
-        .on('finish', () => {
-          ffmpeg(tempPath)
-            .outputOptions('-c:v', 'h264')
-            .outputOptions('-c:a', 'aac')
-            .save(outputPath)
-            .on('end', () => {
-              fs.unlinkSync(tempPath);
-              resolve();
-            })
-            .on('error', (err) => {
-              fs.unlinkSync(tempPath);
-              reject(err);
-            });
-        })
-        .on('error', reject);
-    }
+// Helper: Convert exec to Promise
+function execPromise(command) {
+  return new Promise((resolve, reject) => {
+    exec(command, (error, stdout, stderr) => {
+      if (error) reject(stderr);
+      else resolve(stdout);
+    });
   });
 }
 
-// Social media video download function using Puppeteer
-async function downloadSocialMediaVideo(url, outputPath, format, platform) {
-  let browser;
-  try {
-    browser = await puppeteer.launch({
-      headless: 'new',
-      args: [
-        '--no-sandbox',
-        '--disable-setuid-sandbox',
-        '--disable-dev-shm-usage',
-        '--disable-accelerated-2d-canvas',
-        '--disable-gpu'
-      ]
-    });
+// Fallback route for SPA
+app.get('*', (req, res) => {
+  res.sendFile(path.join(publicPath, 'index.html'));
+});
 
-    const page = await browser.newPage();
-
-    // Handle Instagram cookies (only if file exists)
-    const cookiesPath = path.join(__dirname, 'all_cookies');
-    if (fs.existsSync(cookiesPath)) {
-      const cookies = JSON.parse(fs.readFileSync(cookiesPath, 'utf8'));
-      await page.setCookie(...cookies);
-    } else {
-      console.warn("⚠️ Warning: 'all_cookies' file not found. Running without cookies.");
-    }
-
-    await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36');
-
-    // Capture video requests
-    let videoUrl = null;
-    page.on('response', async (response) => {
-      const requestUrl = response.url();
-      if (requestUrl.includes('.mp4')) {
-        videoUrl = requestUrl;
-      }
-    });
-
-    await page.goto(url, { waitUntil: 'networkidle2', timeout: 60000 });
-
-    await page.waitForSelector('video', { timeout: 10000 });
-
-    if (!videoUrl) {
-      videoUrl = await page.evaluate(() => {
-        const videoElement = document.querySelector('video');
-        return videoElement ? videoElement.src : null;
-      });
-    }
-
-    if (!videoUrl || videoUrl.startsWith('blob:')) {
-      throw new Error(`Could not extract a direct video URL from ${platform}. Try logging in.`);
-    }
-
-    // Download the video file
-    const response = await page.goto(videoUrl);
-    const buffer = await response.buffer();
-    fs.writeFileSync(outputPath, buffer);
-
-    // Validate download
-    if (!fs.existsSync(outputPath)) {
-      throw new Error('Download failed. No video file was saved.');
-    }
-
-  } catch (error) {
-    console.error(`Error downloading ${platform} video:`, error);
-  } finally {
-    if (browser) {
-      await browser.close();
-    }
-  }
-}
-
-// Start server
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+app.listen(port, () => {
+  console.log(`Server running on http://localhost:${port}`);
 });
