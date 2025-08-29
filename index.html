@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Guri - Download videos easily from any platform for Android and iPhone">
+  <meta name="keywords" content="video download, android videos, iphone videos, free video downloader, any platform">
+  <title>Guri - Video Download Platform</title>
+  
+  <!-- Font Awesome for icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  
+  <!-- Schema Markup for SEO -->
+  <script type="application/ld+json">
+  {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": "Guri Video Downloader",
+      "url": "https://guridownloader.com",
+      "potentialAction": {
+          "@type": "SearchAction",
+          "target": "https://guridownloader.com/search?q={search_term_string}",
+          "query-input": "required name=search_term_string"
+      }
+  }
+  </script>
+  
+  <!-- Inline CSS -->
+  <style>
+    /* Google Font Import */
+    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+
+    /* Base Styles */
+    :root {
+      --primary-color: #4c6fff;
+      --secondary-color: #6c63ff;
+      --accent-color: #ff6584;
+      --light-color: #f9f9f9;
+      --dark-color: #333333;
+      --text-color: #555555;
+      --box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+      --transition: all 0.3s ease-in-out;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Poppins', sans-serif;
+      line-height: 1.6;
+      color: var(--text-color);
+      background-color: var(--light-color);
+    }
+    a { text-decoration: none; color: var(--primary-color); transition: var(--transition); }
+    a:hover { color: var(--secondary-color); }
+    ul { list-style: none; }
+    img { max-width: 100%; height: auto; }
+    .container { width: 90%; max-width: 1200px; margin: 0 auto; padding: 0 15px; }
+    .hidden { display: none !important; }
+    section { padding: 80px 0; }
+    h1, h2, h3 { margin-bottom: 15px; }
+    h2 { font-size: 2.5rem; text-align: center; color: var(--dark-color); margin-bottom: 40px; }
+    .primary-btn {
+      display: inline-block;
+      background-color: var(--primary-color);
+      color: white;
+      padding: 12px 30px;
+      border: none;
+      border-radius: 50px;
+      cursor: pointer;
+      font-weight: 500;
+      transition: var(--transition);
+      font-size: 1rem;
+      text-align: center;
+    }
+    .primary-btn:hover {
+      background-color: var(--secondary-color);
+      transform: translateY(-3px);
+      box-shadow: var(--box-shadow);
+    }
+    /* Header Styles */
+    header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      background-color: rgba(255, 255, 255, 0.95);
+      box-shadow: var(--box-shadow);
+      z-index: 100;
+      padding: 15px 0;
+    }
+    header .container {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .logo h1 { color: var(--primary-color); font-size: 2rem; margin: 0; }
+    nav ul { display: flex; }
+    nav ul li { margin-left: 30px; }
+    nav ul li a {
+      color: var(--dark-color);
+      font-weight: 500;
+      padding: 5px 0;
+      position: relative;
+    }
+    nav ul li a:after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 0%;
+      height: 2px;
+      background-color: var(--primary-color);
+      transition: var(--transition);
+    }
+    nav ul li a:hover:after,
+    nav ul li a.active:after { width: 100%; }
+    .menu-toggle { display: none; font-size: 1.5rem; cursor: pointer; color: var(--dark-color); }
+    /* Hero Section */
+    .hero {
+      padding-top: 150px;
+      padding-bottom: 100px;
+      background: linear-gradient(135deg, rgba(76, 111, 255, 0.1) 0%, rgba(108, 99, 255, 0.1) 100%);
+    }
+    .hero-content { max-width: 800px; margin: 0 auto; text-align: center; }
+    .hero h1 { font-size: 3rem; color: var(--dark-color); margin-bottom: 20px; }
+    .hero p { font-size: 1.2rem; margin-bottom: 30px; }
+    .search-box {
+      background-color: white;
+      border-radius: 60px;
+      padding: 10px;
+      box-shadow: var(--box-shadow);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-bottom: 40px;
+    }
+    /* Input and Device Selection */
+    input[type="text"] {
+      width: 100%;
+      padding: 15px 25px;
+      border: 1px solid #ddd;
+      border-radius: 30px;
+      font-size: 1rem;
+      outline: none;
+      margin-bottom: 15px;
+    }
+    .device-selection { display: flex; justify-content: center; margin-bottom: 15px; }
+    .device-option {
+      background-color: #f0f0f0;
+      border: none;
+      padding: 10px 15px;
+      margin: 0 5px;
+      border-radius: 30px;
+      cursor: pointer;
+      transition: var(--transition);
+      font-weight: 500;
+    }
+    .device-option.selected {
+      background-color: var(--primary-color);
+      color: white;
+    }
+    /* Progress Bar */
+    .progress-bar {
+      height: 10px;
+      background-color: #f0f0f0;
+      border-radius: 5px;
+      margin-top: 20px;
+      overflow: hidden;
+      position: relative;
+    }
+    .progress { height: 100%; background-color: var(--primary-color); width: 0%; transition: width 0.3s; }
+    .progress-text { position: absolute; right: 5px; top: -20px; font-size: 0.8rem; }
+    /* Result Box */
+    .result-box {
+      text-align: center;
+      background-color: white;
+      border-radius: 10px;
+      padding: 30px;
+      box-shadow: var(--box-shadow);
+      margin-top: 20px;
+    }
+    .download-link {
+      display: inline-block;
+      background-color: var(--primary-color);
+      color: white;
+      padding: 12px 30px;
+      border-radius: 30px;
+      margin-top: 15px;
+      transition: var(--transition);
+    }
+    .download-link:hover { background-color: var(--secondary-color); }
+    /* Error Message */
+    .error-message {
+      text-align: center;
+      color: #e74c3c;
+      padding: 10px;
+      margin-top: 10px;
+    }
+    .error-message i { margin-right: 5px; }
+    /* Loading Spinner */
+    .spinner {
+      width: 50px;
+      height: 50px;
+      border: 5px solid rgba(76, 111, 255, 0.2);
+      border-top: 5px solid var(--primary-color);
+      border-radius: 50%;
+      margin: 0 auto 20px;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    /* Features Section */
+    .features { background-color: white; }
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 30px;
+    }
+    .feature-card {
+      text-align: center;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: var(--box-shadow);
+      transition: var(--transition);
+    }
+    .feature-card:hover { transform: translateY(-10px); }
+    .feature-card i { font-size: 3rem; color: var(--primary-color); margin-bottom: 20px; }
+    .feature-card h3 { font-size: 1.3rem; margin-bottom: 15px; color: var(--dark-color); }
+    /* About Section */
+    .about { background-color: #f9f9f9; }
+    .about p { margin-bottom: 20px; font-size: 1.1rem; }
+    /* Contact Section */
+    .contact { background-color: #f9f9f9; }
+    .contact-wrapper {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      gap: 40px;
+    }
+    .contact-info, .contact-form { flex: 1; min-width: 300px; }
+    .contact-item {
+      display: flex;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+    .contact-item i {
+      font-size: 1.5rem;
+      color: var(--primary-color);
+      margin-right: 15px;
+    }
+    .social-media { display: flex; margin-top: 30px; }
+    .social-icon {
+      width: 40px;
+      height: 40px;
+      background-color: var(--primary-color);
+      color: white;
+      border-radius: 50%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin-right: 15px;
+      transition: var(--transition);
+    }
+    .social-icon:hover { background-color: var(--secondary-color); transform: translateY(-5px); }
+    .form-group { margin-bottom: 20px; }
+    .form-group input,
+    .form-group textarea {
+      width: 100%;
+      padding: 15px;
+      border: 1px solid #e0e0e0;
+      border-radius: 5px;
+      outline: none;
+      font-family: 'Poppins', sans-serif;
+      transition: var(--transition);
+    }
+    .form-group input:focus,
+    .form-group textarea:focus { border-color: var(--primary-color); }
+    .form-group textarea { height: 150px; resize: vertical; }
+    /* Footer */
+    footer {
+      background-color: var(--dark-color);
+      color: white;
+      padding: 40px 0;
+    }
+    .footer-content {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .footer-links a {
+      color: white;
+      margin-left: 20px;
+      opacity: 0.7;
+      transition: var(--transition);
+    }
+    .footer-links a:hover { opacity: 1; }
+    /* Responsive Styles */
+    @media (max-width: 992px) {
+      .feature-card { padding: 20px; }
+    }
+    @media (max-width: 768px) {
+      nav {
+        position: absolute;
+        top: 70px;
+        left: 0;
+        width: 100%;
+        background-color: white;
+        padding: 20px 0;
+        box-shadow: 0 5px 10px rgba(0, 0, 0, 0.1);
+        clip-path: polygon(0 0, 100% 0, 100% 0, 0 0);
+        transition: var(--transition);
+      }
+      nav.active { clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%); }
+      nav ul { flex-direction: column; align-items: center; }
+      nav ul li { margin: 10px 0; }
+      .menu-toggle { display: block; }
+      .search-box { padding: 20px; }
+      input[type="text"] { width: 100%; margin-bottom: 15px; }
+      .contact-wrapper { flex-direction: column; }
+      .footer-content { flex-direction: column; text-align: center; }
+    }
+    @media (max-width: 576px) {
+      .hero h1 { font-size: 2.2rem; }
+      .feature-card { padding: 15px; }
+      .contact-wrapper { flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+  <!-- Header -->
+  <header>
+    <div class="container">
+      <div class="logo">
+        <h1>Guri's tools</h1>
+      </div>
+      <nav>
+        <ul>
+          <li><a href="#home" class="active">Home</a></li>
+          <li><a href="#about">About</a></li>
+          <li><a href="#contact">Contact</a></li>
+        </ul>
+      </nav>
+      <div class="menu-toggle">
+        <i class="fas fa-bars"></i>
+      </div>
+    </div>
+  </header>
+  
+  <!-- Hero Section -->
+  <section id="home" class="hero">
+    <div class="container">
+      <div class="hero-content" style="text-align: center;">
+        <h1>Download Any Video</h1>
+        <p>Enter any video URL to download videos from any platform. Optimized for Android & iPhone.</p>
+        <div class="search-box">
+          <div id="url-section">
+            <form id="url-form">
+              <input type="text" id="url-input" placeholder="Paste any video URL here..." required>
+              <div class="device-selection">
+                <div class="device-option selected" id="android-option">Android</div>
+                <div class="device-option" id="iphone-option">iPhone</div>
+              </div>
+              <button type="submit" class="primary-btn" id="url-download-btn">
+                <i class="fas fa-download"></i> Download Video
+              </button>
+              <div class="progress-bar" id="url-progress-bar">
+                <div class="progress" id="url-progress"></div>
+                <span class="progress-text" id="progress-text">0%</span>
+              </div>
+              <div class="error-message hidden" id="url-error">
+                <i class="fas fa-exclamation-circle"></i> <span>Error message</span>
+              </div>
+            </form>
+            <div class="result-box hidden" id="url-result">
+              <h3>Your video is ready!</h3>
+              <div class="file-info">
+                <p>Filename: <span id="url-filename">video.mp4</span></p>
+                <p>Format: <span id="url-format">MP4</span></p>
+                <p>Size: <span id="url-size">0 MB</span></p>
+              </div>
+              <a href="#" class="download-link" id="url-download-link">
+                <i class="fas fa-download"></i> Download Now
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+  
+  <!-- Features Section -->
+  <section class="features">
+    <div class="container">
+      <h2>Why Choose Guri?</h2>
+      <div class="features-grid">
+        <div class="feature-card">
+          <i class="fas fa-bolt"></i>
+          <h3>Fast Downloads</h3>
+          <p>Get your videos downloaded quickly with our optimized system.</p>
+        </div>
+        <div class="feature-card">
+          <i class="fas fa-mobile-alt"></i>
+          <h3>Device Compatibility</h3>
+          <p>Optimized formats for both Android and iPhone devices.</p>
+        </div>
+        <div class="feature-card">
+          <i class="fas fa-check-circle"></i>
+          <h3>High Quality</h3>
+          <p>Enjoy your downloads in the best available quality.</p>
+        </div>
+        <div class="feature-card">
+          <i class="fas fa-globe"></i>
+          <h3>Universal Support</h3>
+          <p>Download videos from any platform with just one tool.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+  
+  <!-- About Section -->
+  <section id="about" class="about">
+    <div class="container">
+      <h2>About Guri</h2>
+      <p>Guri is a user-friendly platform designed to help you download videos from any website or platform. Our advanced system supports various video platforms including social media, video sharing sites, streaming services, and more.</p>
+      <p>Our goal is to provide a seamless experience with fast downloads, device-specific optimizations, and an intuitive user interface that works with any video source.</p>
+    </div>
+  </section>
+  
+  <!-- Contact Section -->
+  <section id="contact" class="contact">
+    <div class="container">
+      <h2>Contact Us</h2>
+      <div class="contact-wrapper">
+        <div class="contact-info">
+          <div class="contact-item">
+            <i class="fas fa-envelope"></i>
+            <p>support@guridownloader.com</p>
+          </div>
+          <div class="contact-item">
+            <i class="fas fa-phone"></i>
+            <p>+91 9876543210</p>
+          </div>
+          <div class="social-media">
+            <a href="#" class="social-icon"><i class="fab fa-facebook-f"></i></a>
+            <a href="#" class="social-icon"><i class="fab fa-twitter"></i></a>
+            <a href="#" class="social-icon"><i class="fab fa-instagram"></i></a>
+            <a href="#" class="social-icon"><i class="fab fa-youtube"></i></a>
+          </div>
+        </div>
+        <div class="contact-form">
+          <form id="contact-form">
+            <div class="form-group">
+              <input type="text" id="name" placeholder="Your Name" required>
+            </div>
+            <div class="form-group">
+              <input type="email" id="email" placeholder="Your Email" required>
+            </div>
+            <div class="form-group">
+              <textarea id="message" placeholder="Your Message" required></textarea>
+            </div>
+            <button type="submit" class="primary-btn">Send Message</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </section>
+  
+  <!-- Footer -->
+  <footer>
+    <div class="container">
+      <div class="footer-content">
+        <div class="copyright">
+          <p>&copy; 2025 Guri Video Downloader. All rights reserved.</p>
+        </div>
+        <div class="footer-links">
+          <a href="#">Privacy Policy</a>
+          <a href="#">Terms of Service</a>
+          <a href="#">Disclaimer</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+  
+  <!-- Inline JavaScript -->
+  <script>
+    // Device Selection for URL Section
+    const androidOption = document.getElementById('android-option');
+    const iphoneOption = document.getElementById('iphone-option');
+    androidOption.addEventListener('click', () => {
+      androidOption.classList.add('selected');
+      iphoneOption.classList.remove('selected');
+    });
+    iphoneOption.addEventListener('click', () => {
+      iphoneOption.classList.add('selected');
+      androidOption.classList.remove('selected');
+    });
+    
+    // URL Download Form Handling
+    document.getElementById('url-form').addEventListener('submit', function (e) {
+      e.preventDefault();
+      const urlInput = document.getElementById('url-input');
+      const url = urlInput.value.trim();
+      const isAndroid = androidOption.classList.contains('selected');
+      const format = isAndroid ? 'mp4' : 'mov';
+      const urlError = document.getElementById('url-error');
+      
+      if (!url) {
+        showUrlError('Please enter a valid URL');
+        return;
+      }
+      
+      try {
+        new URL(url);
+      } catch (e) {
+        showUrlError('Invalid URL format');
+        return;
+      }
+      
+      urlError.classList.add('hidden');
+      
+      // Show progress bar and reset its state
+      const progressBar = document.getElementById('url-progress-bar');
+      const progress = document.getElementById('url-progress');
+      const progressText = document.getElementById('progress-text');
+      progressBar.classList.remove('hidden');
+      progress.style.width = '0%';
+      progressText.textContent = '0%';
+      
+      // Hide previous results
+      document.getElementById('url-result').classList.add('hidden');
+      
+      // Simulate progress (since we don't have real-time progress from the server)
+      let progressValue = 0;
+      const progressInterval = setInterval(() => {
+        if (progressValue < 90) {
+          progressValue += Math.random() * 10;
+          progress.style.width = `${progressValue}%`;
+          progressText.textContent = `${Math.floor(progressValue)}%`;
+        }
+      }, 1000);
+      
+      // Call backend /download endpoint with platform detection logic
+      fetch('/downloads', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          url, 
+          format,
+          // Send the detected platform to the backend
+          platform: detectPlatform(url) 
+        })
+      })
+      .then(response => response.json())
+      .then(data => {
+        clearInterval(progressInterval);
+        
+        if (data.success) {
+          // Complete the progress bar
+          progress.style.width = '100%';
+          progressText.textContent = '100%';
+          
+          // Show the result
+          document.getElementById('url-filename').textContent = data.fileName || 'video.mp4';
+          document.getElementById('url-format').textContent = data.format.toUpperCase() || 'MP4';
+          document.getElementById('url-size').textContent = data.size || 'Download Ready';
+          document.getElementById('url-download-link').href = data.downloadUrl;
+          document.getElementById('url-result').classList.remove('hidden');
+        } else {
+          console.error("Backend Error:", data.error);
+          showUrlError(data.error || 'Failed to download video');
+        }
+      })
+      .catch(error => {
+        clearInterval(progressInterval);
+        console.error("Fetch Error:", error);
+        showUrlError('Server error. Please try again.');
+      });
+    });
+    
+    // Function to detect platform from URL
+    function detectPlatform(url) {
+      try {
+        const urlObj = new URL(url);
+        const hostname = urlObj.hostname.toLowerCase();
+        
+        // Check for common video platforms
+        if (hostname.includes('youtube') || hostname.includes('youtu.be')) {
+          return 'youtube';
+        } else if (hostname.includes('facebook') || hostname.includes('fb.com')) {
+          return 'facebook';
+        } else if (hostname.includes('instagram')) {
+          return 'instagram';
+        } else if (hostname.includes('twitter') || hostname.includes('x.com')) {
+          return 'twitter';
+        } else if (hostname.includes('tiktok')) {
+          return 'tiktok';
+        } else if (hostname.includes('vimeo')) {
+          return 'vimeo';
+        } else if (hostname.includes('dailymotion')) {
+          return 'dailymotion';
+        } else if (hostname.includes('twitch')) {
+          return 'twitch';
+        } else if (hostname.includes('reddit')) {
+          return 'reddit';
+        } else if (hostname.includes('linkedin')) {
+          return 'linkedin';
+        } else if (hostname.includes('pinterest')) {
+          return 'pinterest';
+        } else {
+          return 'other';
+        }
+      } catch (e) {
+        return 'unknown';
+      }
+    }
+    
+    function showUrlError(message) {
+      const urlError = document.getElementById('url-error');
+      urlError.querySelector('span').textContent = message;
+      urlError.classList.remove('hidden');
+    }
+    
+    // Mobile Navigation
+    const menuToggle = document.querySelector('.menu-toggle');
+    const nav = document.querySelector('nav');
+    
+    menuToggle.addEventListener('click', () => {
+      nav.classList.toggle('active');
+    });
+    
+    // Contact Form Handling
+    if (document.getElementById('contact-form')) {
+      document.getElementById('contact-form').addEventListener('submit', function (e) {
+        e.preventDefault();
+        alert('Message sent! We will contact you soon.');
+        document.getElementById('contact-form').reset();
+      });
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,25 @@
+{
+  "name": "guri-video-downloader",
+  "version": "1.0.0",
+  "description": "A video downloader service for Android and iPhone devices",
+  "main": "server.js",
+  "scripts": {
+    "start": "YTDL_NO_UPDATE=1 node server.js",
+    "dev": "YTDL_NO_UPDATE=1 nodemon server.js"
+  },
+  "engines": {
+    "node": "18.x"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.18.2",
+    "fluent-ffmpeg": "^2.1.2",
+    "node-fetch": "^2.6.9",
+    "puppeteer": "^22.8.2",
+    "uuid": "^9.0.1",
+    "ytdl-core": "^4.11.5"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  }
+}
