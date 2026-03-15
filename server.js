@@ -1,4 +1,3 @@
-
 import express from 'express';
 import path from 'path';
 import { exec } from 'child_process';
@@ -50,7 +49,7 @@ function deleteFileAfterDelay(filePath, delay) {
   }, delay);
 }
 
-// TMDb Movie Search API
+// TMDb Movie Search API (Original logic kept intact)
 app.get('/search-movie', async (req, res) => {
   const query = req.query.query;
   if (!query) return res.status(400).json({ success: false, error: 'Query is required' });
@@ -78,25 +77,27 @@ app.get('/search-movie', async (req, res) => {
 app.post('/download', async (req, res) => {
   const videoUrl = req.body.url;
   if (!videoUrl) return res.status(400).json({ error: 'Video URL is required' });
+  
   const fileName = `video_${Date.now()}.mp4`;
   const outputPath = path.join(downloadsPath, fileName);
   
-  // YAHAN CHANGE KIYA HAI: Cookies file add kar di hai aur iPhone ka video codec fix lagaya hai
-  const command = `yt-dlp --cookies youtube_cookies.txt -o "${outputPath}" -f "bv*[ext=mp4][vcodec^=avc]+ba[ext=m4a]/b[ext=mp4]/b" --merge-output-format mp4 "${videoUrl}"`;
+  // FINAL COMMAND: Includes iPhone video codec fix + Android Client Bypass (No Cookies needed)
+  const command = `yt-dlp -o "${outputPath}" -f "bv*[ext=mp4][vcodec^=avc]+ba[ext=m4a]/b[ext=mp4]/b" --merge-output-format mp4 --extractor-args "youtube:player_client=android,web" "${videoUrl}"`;
   
   try {
     await execPromise(command);
     console.log(`Downloaded: ${outputPath}`);
     deleteFileAfterDelay(outputPath, 3600000); // Auto-delete after 1 hour
     
+    // Sends the iPhone-friendly download route link back to frontend
     return res.json({ success: true, downloadUrl: `/api/fetch-file/${fileName}` });
   } catch (error) {
     console.error(`Download Error: ${error}`);
-    return res.status(500).json({ error: 'Failed to download video' });
+    return res.status(500).json({ error: 'Failed to download video. The server might be temporarily blocked by YouTube.' });
   }
 });
 
-// iPhone / Safari Fix Route
+// iPhone / Safari File Delivery Fix Route
 app.get('/api/fetch-file/:filename', (req, res) => {
     const fileName = req.params.filename;
     const filePath = path.join(downloadsPath, fileName);
@@ -105,9 +106,11 @@ app.get('/api/fetch-file/:filename', (req, res) => {
       return res.status(404).send('File not found or expired.');
     }
   
+    // Calculate size for proper iOS chunk downloading
     const stat = fs.statSync(filePath);
     const fileSize = stat.size;
   
+    // Required Headers for iOS
     res.setHeader('Content-Type', 'video/mp4');
     res.setHeader('Content-Disposition', `attachment; filename="GuriTools_${fileName}"`);
     res.setHeader('Accept-Ranges', 'bytes');
