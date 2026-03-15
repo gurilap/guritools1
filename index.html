@@ -3,108 +3,85 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="GuriTools - Fast and Free Video Downloader for Android and iPhone. High-quality MP4 downloads without ads.">
-  <meta name="keywords" content="video downloader, download mp4, iphone video downloader, android video downloader, free tools, GuriTools">
-  <meta name="author" content="Guri">
-  <title>GuriTools - Fast Video Download Platform</title>
+  <title>Guri - Video Download Platform</title>
   
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-  <link rel="icon" type="image/png" href="https://cdn-icons-png.flaticon.com/512/2585/2585175.png">
-
+  
   <style>
+    /* AAPKA ORIGINAL CSS WAPAS */
     @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
 
     :root {
       --primary-color: #4c6fff;
       --secondary-color: #6c63ff;
-      --bg-color: #f9f9f9;
-      --card-bg: #ffffff;
+      --accent-color: #ff6584;
+      --light-color: #f9f9f9;
+      --dark-color: #333333;
       --text-color: #555555;
-      --heading-color: #333333;
-      --nav-bg: rgba(255, 255, 255, 0.95);
       --box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
       --transition: all 0.3s ease-in-out;
     }
-
-    /* Dark Mode Variables */
-    body.dark-mode {
-      --bg-color: #121212;
-      --card-bg: #1e1e1e;
-      --text-color: #bbbbbb;
-      --heading-color: #ffffff;
-      --nav-bg: rgba(18, 18, 18, 0.95);
-      --box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
-    }
-
     * { margin: 0; padding: 0; box-sizing: border-box; }
     html { scroll-behavior: smooth; }
     body {
       font-family: 'Poppins', sans-serif;
       line-height: 1.6;
       color: var(--text-color);
-      background-color: var(--bg-color);
-      transition: var(--transition);
+      background-color: var(--light-color);
     }
-
+    a { text-decoration: none; color: var(--primary-color); transition: var(--transition); }
+    ul { list-style: none; }
     .container { width: 90%; max-width: 1200px; margin: 0 auto; padding: 0 15px; }
     .hidden { display: none !important; }
     section { padding: 80px 0; }
-    h1, h2, h3 { color: var(--heading-color); }
-    h2 { font-size: 2.5rem; text-align: center; margin-bottom: 40px; }
-
-    /* Theme Toggle */
-    .theme-toggle {
-      position: fixed;
-      bottom: 20px;
-      right: 20px;
-      width: 50px;
-      height: 50px;
-      background: var(--primary-color);
+    h1, h2, h3 { margin-bottom: 15px; }
+    h2 { font-size: 2.5rem; text-align: center; color: var(--dark-color); margin-bottom: 40px; }
+    
+    .primary-btn {
+      display: inline-block;
+      background-color: var(--primary-color);
       color: white;
-      border-radius: 50%;
-      display: flex;
-      justify-content: center;
-      align-items: center;
+      padding: 12px 30px;
+      border: none;
+      border-radius: 50px;
       cursor: pointer;
-      z-index: 1000;
-      box-shadow: var(--box-shadow);
-      font-size: 1.2rem;
+      font-weight: 500;
+      transition: var(--transition);
+      font-size: 1rem;
+      text-align: center;
     }
 
-    /* Header */
     header {
       position: fixed;
-      top: 0;
-      width: 100%;
-      background-color: var(--nav-bg);
+      top: 0; left: 0; width: 100%;
+      background-color: rgba(255, 255, 255, 0.95);
       box-shadow: var(--box-shadow);
       z-index: 100;
       padding: 15px 0;
-      transition: var(--transition);
     }
     header .container { display: flex; justify-content: space-between; align-items: center; }
-    .logo h1 { color: var(--primary-color); font-size: 1.8rem; margin: 0; }
+    .logo h1 { color: var(--primary-color); font-size: 2rem; margin: 0; }
     nav ul { display: flex; }
     nav ul li { margin-left: 30px; }
-    nav ul li a { color: var(--heading-color); font-weight: 500; }
-    .menu-toggle { display: none; font-size: 1.5rem; cursor: pointer; color: var(--heading-color); }
+    .menu-toggle { display: none; font-size: 1.5rem; cursor: pointer; }
 
-    /* Hero */
     .hero {
       padding-top: 150px;
-      padding-bottom: 80px;
-      text-align: center;
+      padding-bottom: 100px;
       background: linear-gradient(135deg, rgba(76, 111, 255, 0.1) 0%, rgba(108, 99, 255, 0.1) 100%);
     }
-    .hero h1 { font-size: 3rem; margin-bottom: 20px; }
+    .hero-content { max-width: 800px; margin: 0 auto; text-align: center; }
+    .hero h1 { font-size: 3rem; color: var(--dark-color); }
     
     .search-box {
-      background-color: var(--card-bg);
+      background-color: white;
       border-radius: 20px;
-      padding: 40px;
+      padding: 30px;
       box-shadow: var(--box-shadow);
-      max-width: 700px;
-      margin: 40px auto;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-top: 40px;
     }
 
     input[type="text"] {
@@ -114,105 +91,67 @@
       border-radius: 30px;
       font-size: 1rem;
       outline: none;
-      margin-bottom: 20px;
-      background: var(--bg-color);
-      color: var(--heading-color);
+      margin-bottom: 15px;
     }
 
-    .device-selection { display: flex; justify-content: center; gap: 15px; margin-bottom: 25px; }
+    .device-selection { display: flex; justify-content: center; margin-bottom: 15px; }
     .device-option {
-      background-color: #e0e0e0;
-      padding: 10px 25px;
+      background-color: #f0f0f0;
+      padding: 10px 15px;
+      margin: 0 5px;
       border-radius: 30px;
       cursor: pointer;
-      font-weight: 600;
       transition: var(--transition);
     }
     .device-option.selected { background-color: var(--primary-color); color: white; }
 
-    .primary-btn {
-      background-color: var(--primary-color);
-      color: white;
-      padding: 15px 40px;
-      border: none;
-      border-radius: 50px;
-      cursor: pointer;
-      font-weight: 600;
-      font-size: 1.1rem;
-      transition: var(--transition);
-    }
-    .primary-btn:hover { transform: translateY(-3px); box-shadow: var(--box-shadow); background: var(--secondary-color); }
-
-    /* Status & Loading */
-    .status-area { margin-top: 20px; }
-    .spinner {
-      width: 40px;
-      height: 40px;
-      border: 4px solid rgba(76, 111, 255, 0.1);
-      border-top: 4px solid var(--primary-color);
-      border-radius: 50%;
-      margin: 10px auto;
-      animation: spin 1s linear infinite;
-    }
-    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-
     .result-box {
-      background: #28a745;
-      color: white;
-      padding: 20px;
-      border-radius: 15px;
+      text-align: center;
+      background-color: white;
+      border-radius: 10px;
+      padding: 30px;
+      box-shadow: var(--box-shadow);
       margin-top: 20px;
+      width: 100%;
     }
     .download-link {
       display: inline-block;
-      margin-top: 10px;
-      background: white;
-      color: #28a745;
-      padding: 10px 25px;
-      border-radius: 20px;
-      font-weight: bold;
+      background-color: var(--primary-color);
+      color: white;
+      padding: 12px 30px;
+      border-radius: 30px;
+      margin-top: 15px;
     }
 
-    /* Features Grid */
+    /* Features Section */
     .features-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
       gap: 30px;
     }
     .feature-card {
-      background: var(--card-bg);
       text-align: center;
       padding: 30px;
-      border-radius: 15px;
+      border-radius: 10px;
       box-shadow: var(--box-shadow);
+      background: #fff;
     }
-    .feature-card i { font-size: 2.5rem; color: var(--primary-color); margin-bottom: 15px; }
+    .feature-card i { font-size: 3rem; color: var(--primary-color); margin-bottom: 20px; }
 
-    /* Footer */
-    footer { background: var(--dark-color); color: white; padding: 40px 0; text-align: center; }
-    .footer-links { margin-top: 15px; }
-    .footer-links a { color: #aaa; margin: 0 10px; font-size: 0.9rem; }
+    footer { background-color: var(--dark-color); color: white; padding: 40px 0; text-align: center; }
 
-    /* Mobile Fixes */
     @media (max-width: 768px) {
       .hero h1 { font-size: 2.2rem; }
       nav { display: none; }
       .menu-toggle { display: block; }
-      .device-selection { flex-direction: row; }
-      .primary-btn { width: 100%; }
     }
   </style>
 </head>
 <body>
-
-  <div class="theme-toggle" id="theme-btn">
-    <i class="fas fa-moon"></i>
-  </div>
-
   <header>
     <div class="container">
-      <div class="logo"><h1>GuriTools</h1></div>
-      <nav id="nav-menu">
+      <div class="logo"><h1>Guri's tools</h1></div>
+      <nav>
         <ul>
           <li><a href="#home">Home</a></li>
           <li><a href="#about">About</a></li>
@@ -222,37 +161,30 @@
       <div class="menu-toggle"><i class="fas fa-bars"></i></div>
     </div>
   </header>
-
+  
   <section id="home" class="hero">
     <div class="container">
-      <h1>Free Video Downloader</h1>
-      <p>Download your favorite videos in MP4 format. Optimized for Android & iPhone.</p>
-      
-      <div class="search-box">
-        <form id="url-form">
-          <input type="text" id="url-input" placeholder="Paste video URL here (YouTube, Instagram, etc.)" required>
+      <div class="hero-content">
+        <h1>Download Any Video</h1>
+        <p>Enter a URL to download. Optimized for Android &amp; iPhone.</p>
+        
+        <div class="search-box">
+          <form id="url-form" style="width: 100%;">
+            <input type="text" id="url-input" placeholder="Paste video URL here..." required>
+            <div class="device-selection">
+              <div class="device-option selected" id="android-option">Android</div>
+              <div class="device-option" id="iphone-option">iPhone</div>
+            </div>
+            <button type="submit" class="primary-btn" id="download-btn">
+              <i class="fas fa-download"></i> Download Video
+            </button>
+            <div id="loading" class="hidden" style="margin-top: 15px;">Processing... Please wait.</div>
+            <div id="error" class="hidden" style="color: red; margin-top: 15px;"></div>
+          </form>
           
-          <div class="device-selection">
-            <div class="device-option selected" id="android-opt">Android</div>
-            <div class="device-option" id="iphone-opt">iPhone</div>
-          </div>
-          
-          <button type="submit" class="primary-btn" id="dl-btn">
-            <i class="fas fa-cog"></i> Process Video
-          </button>
-        </form>
-
-        <div class="status-area">
-          <div id="loader" class="hidden">
-            <div class="spinner"></div>
-            <p>Fetching video details... Please wait.</p>
-          </div>
-          <div id="error-msg" class="hidden" style="color: #e74c3c; margin-top: 10px;">
-            <i class="fas fa-exclamation-triangle"></i> <span></span>
-          </div>
-          <div id="result-area" class="result-box hidden">
-            <h3>Ready for Download!</h3>
-            <a href="#" id="final-dl-link" class="download-link">Click to Save Video</a>
+          <div class="result-box hidden" id="result-box">
+            <h3>Your video is ready!</h3>
+            <a href="#" class="download-link" id="final-link">Download Now</a>
           </div>
         </div>
       </div>
@@ -260,117 +192,77 @@
   </section>
 
   <section id="features" class="container">
-    <h2>Why GuriTools?</h2>
+    <h2>Why Choose Guri?</h2>
     <div class="features-grid">
       <div class="feature-card">
-        <i class="fas fa-tachometer-alt"></i>
-        <h3>Super Fast</h3>
-        <p>Optimized server-side processing for instant download links.</p>
+        <i class="fas fa-bolt"></i>
+        <h3>Fast Process</h3>
+        <p>Optimized system for quick downloads.</p>
       </div>
       <div class="feature-card">
-        <i class="fas fa-mobile-button"></i>
-        <h3>iOS Ready</h3>
-        <p>Special headers ensure videos save directly to your iPhone camera roll.</p>
+        <i class="fas fa-mobile-alt"></i>
+        <h3>Compatible</h3>
+        <p>Works perfectly on Android & iPhone.</p>
       </div>
       <div class="feature-card">
-        <i class="fas fa-shield-halved"></i>
-        <h3>No Ads</h3>
-        <p>Clean interface without annoying popups or malicious redirects.</p>
+        <i class="fas fa-check-circle"></i>
+        <h3>High Quality</h3>
+        <p>Best available quality provided.</p>
       </div>
-    </div>
-  </section>
-
-  <section id="about" style="background: var(--card-bg);">
-    <div class="container" style="text-align: center;">
-      <h2>About Our Tool</h2>
-      <p style="max-width: 800px; margin: 0 auto;">GuriTools is a high-performance video extraction service. We use advanced backend tech to bypass restrictions and provide you with clean MP4 files compatible with all modern devices.</p>
     </div>
   </section>
 
   <footer>
     <div class="container">
-      <p>&copy; 2026 GuriTools. Powered by Guri.</p>
-      <div class="footer-links">
-        <a href="#">Privacy Policy</a> | <a href="#">Terms of Use</a> | <a href="#">DMCA</a>
-      </div>
+      <p>&copy; 2026 Guri Video Downloader. All rights reserved.</p>
     </div>
   </footer>
 
   <script>
-    // Theme Toggle Logic
-    const themeBtn = document.getElementById('theme-btn');
-    const body = document.body;
-    
-    if(localStorage.getItem('theme') === 'dark') {
-      body.classList.add('dark-mode');
-      themeBtn.innerHTML = '<i class="fas fa-sun"></i>';
-    }
-
-    themeBtn.addEventListener('click', () => {
-      body.classList.toggle('dark-mode');
-      const isDark = body.classList.contains('dark-mode');
-      localStorage.setItem('theme', isDark ? 'dark' : 'light');
-      themeBtn.innerHTML = isDark ? '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon"></i>';
-    });
-
     // Device Selection
-    const andBtn = document.getElementById('android-opt');
-    const iphBtn = document.getElementById('iphone-opt');
-    let selectedDevice = 'android';
+    const android = document.getElementById('android-option');
+    const iphone = document.getElementById('iphone-option');
+    let isIphone = false;
 
-    andBtn.onclick = () => { andBtn.classList.add('selected'); iphBtn.classList.remove('selected'); selectedDevice = 'android'; };
-    iphBtn.onclick = () => { iphBtn.classList.add('selected'); andBtn.classList.remove('selected'); selectedDevice = 'iphone'; };
+    android.onclick = () => { android.classList.add('selected'); iphone.classList.remove('selected'); isIphone = false; };
+    iphone.onclick = () => { iphone.classList.add('selected'); android.classList.remove('selected'); isIphone = true; };
 
-    // Form Submission
+    // Form Handling
     document.getElementById('url-form').onsubmit = async (e) => {
       e.preventDefault();
       const url = document.getElementById('url-input').value.trim();
-      const loader = document.getElementById('loader');
-      const errorArea = document.getElementById('error-msg');
-      const resultArea = document.getElementById('result-area');
-      const dlBtn = document.getElementById('dl-btn');
+      const load = document.getElementById('loading');
+      const err = document.getElementById('error');
+      const res = document.getElementById('result-box');
 
-      // Reset UI
-      errorArea.classList.add('hidden');
-      resultArea.classList.add('hidden');
-      loader.classList.remove('hidden');
-      dlBtn.disabled = true;
+      load.classList.remove('hidden');
+      err.classList.add('hidden');
+      res.classList.add('hidden');
 
       try {
         const response = await fetch('/download', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ url: url })
+          body: JSON.stringify({ url })
         });
-
         const data = await response.json();
 
         if (data.success) {
-          loader.classList.add('hidden');
-          resultArea.classList.remove('hidden');
-          const finalLink = document.getElementById('final-dl-link');
-          finalLink.href = data.downloadUrl;
+          load.classList.add('hidden');
+          res.classList.remove('hidden');
+          document.getElementById('final-link').href = data.downloadUrl;
           
-          // Auto-trigger for iPhone
-          if(selectedDevice === 'iphone') {
+          if(isIphone) {
             window.location.href = data.downloadUrl;
           }
         } else {
-          throw new Error(data.error || 'Failed to process video');
+          throw new Error(data.error || 'Download failed');
         }
-      } catch (err) {
-        loader.classList.add('hidden');
-        errorArea.classList.remove('hidden');
-        errorArea.querySelector('span').innerText = err.message;
-      } finally {
-        dlBtn.disabled = false;
+      } catch (error) {
+        load.classList.add('hidden');
+        err.classList.remove('hidden');
+        err.innerText = error.message;
       }
-    };
-
-    // Mobile Menu
-    document.querySelector('.menu-toggle').onclick = () => {
-      const nav = document.getElementById('nav-menu');
-      nav.style.display = nav.style.display === 'block' ? 'none' : 'block';
     };
   </script>
 </body>
