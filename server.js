@@ -1,3 +1,4 @@
+
 import express from 'express';
 import path from 'path';
 import { exec } from 'child_process';
@@ -21,8 +22,12 @@ const downloadsPath = path.join(publicPath, 'downloads');
 
 if (!fs.existsSync(publicPath)) {
   fs.mkdirSync(publicPath, { recursive: true });
-  const htmlContent = fs.readFileSync(path.join(__dirname, 'index.html'), 'utf8');
-  fs.writeFileSync(path.join(publicPath, 'index.html'), htmlContent);
+  try {
+    const htmlContent = fs.readFileSync(path.join(__dirname, 'index.html'), 'utf8');
+    fs.writeFileSync(path.join(publicPath, 'index.html'), htmlContent);
+  } catch(e) {
+      console.log("index.html template not found in root, ignoring copy.");
+  }
 }
 if (!fs.existsSync(downloadsPath)) {
   fs.mkdirSync(downloadsPath, { recursive: true });
@@ -31,7 +36,9 @@ if (!fs.existsSync(downloadsPath)) {
 // Middleware for JSON parsing
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(express.static(publicPath));
+
+// Serve static files from public (except downloads, we handle that manually now for iPhone)
+app.use(express.static(publicPath, { index: false }));
 
 // Auto-delete downloaded files after 1 hour
 function deleteFileAfterDelay(filePath, delay) {
@@ -73,20 +80,43 @@ app.post('/download', async (req, res) => {
   if (!videoUrl) return res.status(400).json({ error: 'Video URL is required' });
   const fileName = `video_${Date.now()}.mp4`;
   const outputPath = path.join(downloadsPath, fileName);
+  
   // yt-dlp command to download best video and audio and merge using ffmpeg
   const command = `yt-dlp -o "${outputPath}" -f "bv*[ext=mp4]+ba[ext=m4a]/b[ext=mp4]" --merge-output-format mp4 "${videoUrl}"`;
+  
   try {
     await execPromise(command);
     console.log(`Downloaded: ${outputPath}`);
     deleteFileAfterDelay(outputPath, 3600000); // Auto-delete after 1 hour
-    return res.json({ success: true, downloadUrl: `/downloads/${fileName}` });
+    
+    return res.json({ success: true, downloadUrl: `/api/fetch-file/${fileName}` });
   } catch (error) {
     console.error(`Download Error: ${error}`);
     return res.status(500).json({ error: 'Failed to download video' });
   }
 });
 
-// Helper: Convert exec to Promise
+// iPhone / Safari Fix Route
+app.get('/api/fetch-file/:filename', (req, res) => {
+    const fileName = req.params.filename;
+    const filePath = path.join(downloadsPath, fileName);
+  
+    if (!fs.existsSync(filePath)) {
+      return res.status(404).send('File not found or expired.');
+    }
+  
+    const stat = fs.statSync(filePath);
+    const fileSize = stat.size;
+  
+    res.setHeader('Content-Type', 'video/mp4');
+    res.setHeader('Content-Disposition', `attachment; filename="GuriTools_${fileName}"`);
+    res.setHeader('Accept-Ranges', 'bytes');
+    res.setHeader('Content-Length', fileSize);
+  
+    const fileStream = fs.createReadStream(filePath);
+    fileStream.pipe(res);
+});
+
 function execPromise(command) {
   return new Promise((resolve, reject) => {
     exec(command, (error, stdout, stderr) => {
@@ -96,9 +126,13 @@ function execPromise(command) {
   });
 }
 
-// Fallback route for SPA
 app.get('*', (req, res) => {
-  res.sendFile(path.join(publicPath, 'index.html'));
+    const htmlPath = path.join(publicPath, 'index.html');
+    if(fs.existsSync(htmlPath)){
+        res.sendFile(htmlPath);
+    } else {
+        res.send("Welcome to GuriTools API. Frontend UI missing in public folder.");
+    }
 });
 
 app.listen(port, () => {
