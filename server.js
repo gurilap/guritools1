@@ -37,7 +37,7 @@ if (!fs.existsSync(downloadsPath)) {
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Serve static files from public (except downloads, we handle that manually now for iPhone)
+// Serve static files from public
 app.use(express.static(publicPath, { index: false }));
 
 // Auto-delete downloaded files after 1 hour
@@ -81,8 +81,8 @@ app.post('/download', async (req, res) => {
   const fileName = `video_${Date.now()}.mp4`;
   const outputPath = path.join(downloadsPath, fileName);
   
-  // yt-dlp command to download best video and audio and merge using ffmpeg
-  const command = `yt-dlp -o "${outputPath}" -f "bv*[ext=mp4]+ba[ext=m4a]/b[ext=mp4]" --merge-output-format mp4 "${videoUrl}"`;
+  // YAHAN CHANGE KIYA HAI: Cookies file add kar di hai aur iPhone ka video codec fix lagaya hai
+  const command = `yt-dlp --cookies youtube_cookies.txt -o "${outputPath}" -f "bv*[ext=mp4][vcodec^=avc]+ba[ext=m4a]/b[ext=mp4]/b" --merge-output-format mp4 "${videoUrl}"`;
   
   try {
     await execPromise(command);
@@ -117,6 +117,7 @@ app.get('/api/fetch-file/:filename', (req, res) => {
     fileStream.pipe(res);
 });
 
+// Helper: Convert exec to Promise
 function execPromise(command) {
   return new Promise((resolve, reject) => {
     exec(command, (error, stdout, stderr) => {
@@ -126,6 +127,7 @@ function execPromise(command) {
   });
 }
 
+// Fallback route for SPA
 app.get('*', (req, res) => {
     const htmlPath = path.join(publicPath, 'index.html');
     if(fs.existsSync(htmlPath)){
