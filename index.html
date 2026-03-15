@@ -85,12 +85,8 @@
     nav ul li a { color: var(--heading-color); font-weight: 500; text-decoration: none; }
     .menu-toggle { display: none; font-size: 1.5rem; cursor: pointer; color: var(--heading-color); }
 
-    .ad-slot {
-      width: 100%; max-width: 728px; margin: 20px auto; padding: 10px;
-      text-align: center; background-color: var(--card-bg);
-      border: 1px dashed #ccc; color: var(--text-color);
-      font-size: 0.9rem; border-radius: 10px;
-    }
+    /* Invisible Ad Slot for future use */
+    .ad-slot { width: 100%; text-align: center; margin: 15px 0; }
 
     .hero {
       padding-top: 120px; padding-bottom: 80px; text-align: center;
@@ -126,7 +122,6 @@
     }
     .primary-btn:hover { transform: translateY(-3px); box-shadow: var(--box-shadow); background: var(--secondary-color); }
 
-    /* Wapas add kiya gaya Progress Bar CSS */
     .progress-bar {
       height: 10px; background-color: #f0f0f0; border-radius: 5px;
       margin-top: 20px; overflow: hidden; position: relative;
@@ -134,7 +129,6 @@
     .progress { height: 100%; background-color: var(--primary-color); width: 0%; transition: width 0.3s; }
     .progress-text { position: absolute; right: 5px; top: -20px; font-size: 0.8rem; color: var(--text-color); }
 
-    /* Wapas add kiya gaya File Info aur Result Box CSS */
     .result-box {
       background-color: var(--card-bg); border-radius: 10px; padding: 30px;
       box-shadow: var(--box-shadow); margin-top: 20px; text-align: center;
@@ -209,9 +203,7 @@
   <section id="home" class="hero">
     <div class="container">
       
-      <div class="ad-slot">
-        <p style="color: #aaa; margin-bottom: 5px;">Advertisement</p>
-        </div>
+      <div class="ad-slot" id="top-ad"></div>
 
       <h1>Free Video Downloader</h1>
       <p>Download your favorite videos in MP4 format. Optimized for Android & iPhone.</p>
@@ -252,9 +244,7 @@
         </div>
       </div>
 
-      <div class="ad-slot">
-        <p style="color: #aaa; margin-bottom: 5px;">Advertisement</p>
-        </div>
+      <div class="ad-slot" id="bottom-ad"></div>
 
     </div>
   </section>
@@ -367,7 +357,7 @@
       pBar.classList.remove('hidden');
       dlBtn.disabled = true;
       
-      // Fake Progress Start (Kyunki backend block ho jata hai stream nahi karta)
+      // Fake Progress Start
       let prog = 0;
       pFill.style.width = '0%';
       pText.innerText = '0%';
@@ -390,7 +380,6 @@
         const data = await response.json();
 
         if (data.success) {
-          // Progress ko 100% karke chupa do
           clearInterval(progressInterval);
           pFill.style.width = '100%';
           pText.innerText = '100%';
@@ -399,14 +388,12 @@
             pBar.classList.add('hidden');
             resultArea.classList.remove('hidden');
             
-            // Set File info
             const filenameSplit = data.downloadUrl.split('/');
             document.getElementById('url-filename').innerText = filenameSplit[filenameSplit.length - 1];
             
             const finalLink = document.getElementById('url-download-link');
             finalLink.href = data.downloadUrl;
             
-            // Auto-trigger for iPhone
             if(selectedDevice === 'iphone') {
               window.location.href = data.downloadUrl;
             }
@@ -425,7 +412,7 @@
       }
     };
 
-    // Mobile Menu Toggle (10-15s Auto-Close Fix)
+    // Mobile Menu Toggle (12s Auto-Close Fix)
     let menuTimer;
     document.querySelector('.menu-toggle').onclick = () => {
       const nav = document.getElementById('nav-menu');
@@ -436,14 +423,12 @@
       } else {
         nav.style.display = 'block';
         
-        // Agar user 12 second tak kuch click nahi karta, to menu automatically band ho jayega
         menuTimer = setTimeout(() => {
           nav.style.display = 'none';
         }, 12000); 
       }
     };
 
-    // Close menu when a link is clicked
     document.querySelectorAll('#nav-menu a').forEach(link => {
       link.addEventListener('click', () => {
         document.getElementById('nav-menu').style.display = 'none';
